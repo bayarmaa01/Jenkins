@@ -1,13 +1,11 @@
-# === FRONTEND STAGE ===
-FROM node:18 AS frontend
+FROM node:18 as build
 WORKDIR /app
-COPY frontend/ .
+COPY package*.json ./
 RUN npm install
+COPY . .
 RUN npm run build
 
-# === BACKEND STAGE ===
-FROM openjdk:17-jdk-slim
-WORKDIR /app
-COPY backend/target/*.jar app.jar
-COPY --from=frontend /app/build /app/static
-ENTRYPOINT ["java", "-jar", "app.jar"]
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
